@@ -1367,4 +1367,5 @@ class CalDavBackend extends AbstractBackend implements SyncSupport, Subscription
 	public function applyShareAcl($resourceId, $acl) {
 		return $this->sharingBackend->applyShareAcl($resourceId, $acl);
 	}
+
 }
