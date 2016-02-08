@@ -31,6 +31,8 @@ use OCP\IRequest;
 use Symfony\Component\Console\Application as SymfonyApplication;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+use Symfony\Component\Console\Output\NullOutput;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
@@ -59,16 +61,26 @@ class Application {
 	 * @param OutputInterface $output
 	 * @throws \Exception
 	 */
-	public function loadCommands(OutputInterface $output) {
+	public function loadCommands(InputInterface $input,  OutputInterface $output) {
 		// $application is required to be defined in the register_command scripts
 		$application = $this->application;
+		$inputDefinition = $application->getDefinition();
+		$inputDefinition->addOption(
+			new InputOption('no-warnings', null, InputOption::VALUE_OPTIONAL, 'Skip global warnings, show command output only', null)
+		);
+		$input->bind($inputDefinition);
+		if ($input->getOption('no-warnings')){
+			$currentOutput = new NullOutput();
+		} else {
+			$currentOutput = $output;
+		}
 		require_once __DIR__ . '/../../../core/register_command.php';
 		if ($this->config->getSystemValue('installed', false)) {
 			if (\OCP\Util::needUpgrade()) {
-				$output->writeln("ownCloud or one of the apps require upgrade - only a limited number of commands are available");
-				$output->writeln("You may use your browser or the occ upgrade command to do the upgrade");
+				$currentOutput->writeln("ownCloud or one of the apps require upgrade - only a limited number of commands are available");
+				$currentOutput->writeln("You may use your browser or the occ upgrade command to do the upgrade");
 			} elseif ($this->config->getSystemValue('maintenance', false)) {
-				$output->writeln("ownCloud is in maintenance mode - no app have been loaded");
+				$currentOutput->writeln("ownCloud is in maintenance mode - no app have been loaded");
 			} else {
 				OC_App::loadApps();
 				foreach (\OC::$server->getAppManager()->getInstalledApps() as $app) {
@@ -84,7 +96,7 @@ class Application {
 				}
 			}
 		} else {
-			$output->writeln("ownCloud is not installed - only a limited number of commands are available");
+			$currentOutput->writeln("ownCloud is not installed - only a limited number of commands are available");
 		}
 		$input = new ArgvInput();
 		if ($input->getFirstArgument() !== 'check') {
