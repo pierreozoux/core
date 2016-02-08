@@ -27,6 +27,9 @@ use Sabre\VObject\Component\VCalendar;
 use Sabre\VObject\Reader;
 
 class BirthdayService {
+
+	const BIRTHDAY_CALENDAR_URI = 'contact_birthdays';
+
 	/**
 	 * BirthdayService constructor.
 	 *
@@ -47,7 +50,7 @@ class BirthdayService {
 
 		$book = $this->cardDavBackEnd->getAddressBookById($addressBookId);
 		$principalUri = $book['principaluri'];
-		$calendarUri = 'contact_birthdays';
+		$calendarUri = self::BIRTHDAY_CALENDAR_URI;
 		$calendar = $this->ensureCalendarExists($principalUri, $calendarUri, []);
 		$objectUri = $book['uri'] . '-' . $cardUri. '.ics';
 		$calendarData = $this->buildBirthdayFromContact($cardData);
@@ -70,7 +73,7 @@ class BirthdayService {
 	public function onCardDeleted($addressBookId, $cardUri) {
 		$book = $this->cardDavBackEnd->getAddressBookById($addressBookId);
 		$principalUri = $book['principaluri'];
-		$calendarUri = 'contact_birthdays';
+		$calendarUri = self::BIRTHDAY_CALENDAR_URI;
 		$calendarId = $this->ensureCalendarExists($principalUri, $calendarUri, []);
 		$objectUri = $book['uri'] . '-' . $cardUri. '.ics';
 		$this->calDavBackEnd->deleteCalendarObject($calendarId, $objectUri);
@@ -137,16 +140,10 @@ class BirthdayService {
 			$date
 		);
 		$vEvent->DTEND['VALUE'] = 'DATE';
-//		$lm = new \DateTime('@' . $this->lastModified());
-//		$lm->setTimeZone(new \DateTimeZone('UTC'));
-//		$vEvent->DTSTAMP->setDateTime($lm);
 		$vEvent->{'UID'} = $doc->UID;
 		$vEvent->{'RRULE'} = 'FREQ=YEARLY';
 		$vEvent->{'SUMMARY'} = $title . ' (' . $date->format('Y') . ')';
 		$vEvent->{'TRANSP'} = 'TRANSPARENT';
-//		$appInfo = \OCP\App::getAppInfo('contacts');
-//		$appVersion = \OCP\App::getAppVersion('contacts');
-//		$vCal->PRODID = '-//ownCloud//NONSGML ' . $appInfo['name'] . ' ' . $appVersion . '//EN';
 		$vCal->add($vEvent);
 		return $vCal;
 	}
