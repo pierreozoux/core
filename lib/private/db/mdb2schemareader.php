@@ -313,6 +313,10 @@ class MDB2SchemaReader {
 			}
 		}
 		if (!empty($fields)) {
+			if ($name === null || $name === '') {
+				throw new \DomainException('Index has no name');
+			}
+
 			if (isset($primary) && $primary) {
 				if ($table->hasPrimaryKey()) {
 					return;
